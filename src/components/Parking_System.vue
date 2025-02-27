@@ -28,24 +28,49 @@ export default {
   },
   methods:{
 
-    pickRandom(){
-      const randomIndex = Math.floor(Math.random() * this.saved_plates.length);
-      this.randomElement = this.saved_plates[randomIndex];
-    },
+    CheckPlate(give_plate){
 
+      let exists = false;
+      this.saved_plates.forEach(item => {
+        if (item.plate === give_plate ){
+          exists = true;
+        }
+      })
+
+      return exists;
+    },
     SavePlateValue(){
+
       if(this.plate.trim() !== ''){
-        data = {
+        let data = {
+          id: null,
           plate : this.plate,
           time : Date.now(),
           available : true,
         }
+        if (this.CheckPlate(this.plate)){
+          this.plate = null;
+          return alert('این پلاک وجود دارد')
+        }
+
+
         let places = this.saved_plates.filter(item => {
           if (!item.plate && item.available){
             return item;
           }
         })
 
+        //get random from places
+        const randomIndex = Math.floor(Math.random() * places.length);
+        let find = places[randomIndex]
+        data.id = find.id
+        this.saved_plates =  this.saved_plates.map(item => {
+          if (item.id === find.id){
+            return data;
+          }else{
+            return item;
+          }
+        })
 
       }else{
         alert('لطفا پلاک خود را وارد کنید')
@@ -60,7 +85,8 @@ export default {
       if(SaveData){
         this.saved_plates = JSON.parse(SaveData)
       }
-    }
+    },
+
   }
 }
 </script>
