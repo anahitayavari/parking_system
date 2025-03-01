@@ -77,6 +77,7 @@ export default {
       }
 
     },
+
     UpdatePlateValue(){
       localStorage.setItem("saved_plate", JSON.stringify(this.saved_plate))
     },
@@ -89,6 +90,8 @@ export default {
 
   }
 }
+
+
 </script>
 
 <template>
