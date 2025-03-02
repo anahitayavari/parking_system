@@ -2,7 +2,7 @@
 export default {
   name: "Parking_System",
   mounted() {
-    for (let i=1;i<=60;i++){
+    for (let i=1;i<=12;i++){
       this.saved_plates.push(
           {
             id : i,
@@ -12,9 +12,9 @@ export default {
           }
       )
     }
-
-    this.loadFromLocalStorage()
-
+    if (localStorage.getItem("plates")){
+      this.saved_plates = JSON.parse(localStorage.getItem("plates"));
+    }
 
 
   },
@@ -27,7 +27,23 @@ export default {
     }
   },
   methods:{
+    getCurrentTime() {
+          const now = new Date();
 
+          const options = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false // Use 24-hour format
+          };
+
+          const formattedDate = now.toLocaleString('en-US', options)
+              .replace(/(\d+)\/(\d+)\/(\d+), (\d+:\d+)/, '$3/$1/$2 - $4');
+
+          return formattedDate;
+    },
     CheckPlate(give_plate){
 
       let exists = false;
@@ -40,26 +56,25 @@ export default {
       return exists;
     },
     SavePlateValue(){
-
       if(this.plate.trim() !== ''){
         let data = {
           id: null,
           plate : this.plate,
-          time : Date.now(),
+          time : this.getCurrentTime(),
           available : true,
         }
         if (this.CheckPlate(this.plate)){
           this.plate = null;
           return alert('این پلاک وجود دارد')
         }
-
-
         let places = this.saved_plates.filter(item => {
           if (!item.plate && item.available){
             return item;
           }
         })
-
+        if (places.length < 1){
+          return alert('ظرفیت تکمیل است')
+        }
         //get random from places
         const randomIndex = Math.floor(Math.random() * places.length);
         let find = places[randomIndex]
@@ -71,22 +86,37 @@ export default {
             return item;
           }
         })
+        localStorage.setItem('plates', JSON.stringify(this.saved_plates))
 
       }else{
         alert('لطفا پلاک خود را وارد کنید')
       }
 
     },
+    Change_Available(id){
+      this.saved_plates = this.saved_plates.filter(item => {
+        if (item.id === id){
+          item.available = !item.available;
+        }
+        return item;
+      })
+      localStorage.setItem('plates', JSON.stringify(this.saved_plates))
+    },
+    Exit_Car(id){
+      this.saved_plates = this.saved_plates.filter(item => {
+        if (item.id === id){
+          item.available = true;
+          item.plate  = null;
+          item.time  = null;
+        }
+        return item;
+      })
 
-    UpdatePlateValue(){
-      localStorage.setItem("saved_plate", JSON.stringify(this.saved_plate))
-    },
-    loadFromLocalStorage(){
-      const SaveData = localStorage.getItem("saved_plate")
-      if(SaveData){
-        this.saved_plates = JSON.parse(SaveData)
-      }
-    },
+      //
+      alert('هزینه خودرو : ')
+
+      localStorage.setItem('plates', JSON.stringify(this.saved_plates))
+    }
 
   }
 }
@@ -113,7 +143,20 @@ export default {
     <div class="row q-col-gutter-lg q-mt-md ">
       <div class="col-md-2" v-for="(value,index) in saved_plates">
         <q-card class="card" :class="{'bg-green-6' : !value.plate && value.available,'bg-red-6': value.plate , 'bg-dark': !value.available}">
-
+          <q-card-section class=" q-pa-xs">
+            <div v-if="value.plate" class="q-mb-md text-center">
+              <div>
+                <strong class="text-white">{{value.plate}}</strong>
+              </div>
+              <div>
+                <span class="text-white">{{value.time}}</span>
+              </div>
+            </div>
+            <div class="text-center">
+              <q-btn @click="Exit_Car(value.id)" v-if="value.plate" color="white" label="خروج" size="sm" text-color="dark" rounded class="q-mr-sm"></q-btn>
+              <q-btn @click="Change_Available(value.id)" rounded label="تغییر وضعیت" color="grey-8" size="sm"></q-btn>
+            </div>
+          </q-card-section>
         </q-card>
       </div>
     </div>
